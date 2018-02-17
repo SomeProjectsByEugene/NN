@@ -232,6 +232,26 @@ namespace NN {
         #region Components initialization
 
         /// <summary>
+        /// Initialize weights using random and biases
+        /// </summary>
+        private void InitializeWeights() {
+            weights = new List<double[,]>();
+            for (int i = 1; i < layers.Length; i++) {
+                //Between each two layers there's weights matrix
+                //In (layers[i - 1] + 1) "+1" is for extra space for bias
+                var weightsBetweenLayers = new double[layers[i], layers[i - 1] + 1];
+                //Randomizing weights
+                for (int j = 0; j < weightsBetweenLayers.GetLength(0); j++) {
+                    //"-1" for not touching space for biases
+                    for (int k = 0; k < weightsBetweenLayers.GetLength(1) - 1; k++) {
+                        weightsBetweenLayers[j, k] = random.NextDouble() * (topRandom - bottomRandom) + bottomRandom;
+                    }
+                }
+                weights.Add(weightsBetweenLayers);
+            }
+        }
+
+        /// <summary>
         /// Initialize biases with zeros
         /// </summary>
         /// <param name="biases"></param>
@@ -263,26 +283,6 @@ namespace NN {
                 this.biases.Add(Matrix.FromArray(currentBias));
             }
         }
-
-        ///// <summary>
-        ///// Initialize weights using random and biases
-        ///// </summary>
-        //private void InitializeWeights() {
-        //    weights = new List<double[,]>();
-        //    for (int i = 1; i < layers.Length; i++) {
-        //        //Between each two layers there's weights matrix
-        //        //In (layers[i - 1] + 1) "+1" is for extra space for bias
-        //        var weightsBetweenLayers = new double[layers[i], layers[i - 1] + 1];
-        //        //Randomizing weights
-        //        for (int j = 0; j < weightsBetweenLayers.GetLength(0); j++) {
-        //            //"-1" for not touching space for biases
-        //            for (int k = 0; k < weightsBetweenLayers.GetLength(1) - 1; k++) {
-        //                weightsBetweenLayers[j, k] = random.NextDouble() * (topRandom - bottomRandom) + bottomRandom;
-        //            }
-        //        }
-        //        weights.Add(weightsBetweenLayers);
-        //    }
-        //}
 
         ///// <summary>
         ///// Initialize biases with random values
