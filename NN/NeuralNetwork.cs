@@ -69,6 +69,7 @@ namespace NN {
         //Rows - number of neurons in current layer,
         //columns - number of neurons in previous layer
         protected List<double[,]> weights;
+        protected List<double[,]> biases;
 
         private double lerningRate;
 
@@ -231,34 +232,17 @@ namespace NN {
         #region Components initialization
 
         /// <summary>
-        /// Initialize weights using random and biases
-        /// </summary>
-        private void InitializeWeights() {
-            weights = new List<double[,]>();
-            for (int i = 1; i < layers.Length; i++) {
-                //Between each two layers there's weights matrix
-                //In (layers[i - 1] + 1) "+1" is for extra space for bias
-                var weightsBetweenLayers = new double[layers[i], layers[i - 1] + 1];
-                //Randomizing weights
-                for (int j = 0; j < weightsBetweenLayers.GetLength(0); j++) {
-                    //"-1" for not touching space for biases
-                    for (int k = 0; k < weightsBetweenLayers.GetLength(1) - 1; k++) {
-                        weightsBetweenLayers[j, k] = random.NextDouble() * (topRandom - bottomRandom) + bottomRandom;
-                    }
-                }
-                weights.Add(weightsBetweenLayers);
-            }
-        }
-
-        /// <summary>
-        /// Initialize biases with random values
+        /// Initialize biases with zeros
         /// </summary>
         /// <param name="biases"></param>
         private void InitializeBiases() {
-            for (int i = 0; i < layers.Length - 1; i++) {
-                for (int j = 0; j < weights[i].GetLength(0); j++) {
-                    weights[i][j, weights[i].GetLength(1) - 1] = random.NextDouble() * (topRandom - bottomRandom) + bottomRandom;
+            this.biases = new List<double[,]>();
+            for (int i = 1; i < layers.Length; i++) {
+                var currentBias = new double[layers[i]];
+                for (int j = 0; j < currentBias.Length; j++) {
+                    currentBias[j] = 0.0;
                 }
+                this.biases.Add(Matrix.FromArray(currentBias));
             }
         }
 
@@ -270,12 +254,62 @@ namespace NN {
             if (biases.Length != layers.Length - 1) {
                 throw new Exception();
             }
-            for (int i = 0; i < layers.Length - 1; i++) {
-                for (int j = 0; j < weights[i].GetLength(0); j++) {
-                    weights[i][j, weights[i].GetLength(1) - 1] = biases[i];
+            this.biases = new List<double[,]>();
+            for (int i = 0; i < biases.Length; i++) {
+                var currentBias = new double[layers[i + 1]];
+                for (int j = 0; j < currentBias.Length; j++) {
+                    currentBias[j] = biases[i];
                 }
+                this.biases.Add(Matrix.FromArray(currentBias));
             }
         }
+
+        ///// <summary>
+        ///// Initialize weights using random and biases
+        ///// </summary>
+        //private void InitializeWeights() {
+        //    weights = new List<double[,]>();
+        //    for (int i = 1; i < layers.Length; i++) {
+        //        //Between each two layers there's weights matrix
+        //        //In (layers[i - 1] + 1) "+1" is for extra space for bias
+        //        var weightsBetweenLayers = new double[layers[i], layers[i - 1] + 1];
+        //        //Randomizing weights
+        //        for (int j = 0; j < weightsBetweenLayers.GetLength(0); j++) {
+        //            //"-1" for not touching space for biases
+        //            for (int k = 0; k < weightsBetweenLayers.GetLength(1) - 1; k++) {
+        //                weightsBetweenLayers[j, k] = random.NextDouble() * (topRandom - bottomRandom) + bottomRandom;
+        //            }
+        //        }
+        //        weights.Add(weightsBetweenLayers);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Initialize biases with random values
+        ///// </summary>
+        ///// <param name="biases"></param>
+        //private void InitializeBiases() {
+        //    for (int i = 0; i < layers.Length - 1; i++) {
+        //        for (int j = 0; j < weights[i].GetLength(0); j++) {
+        //            weights[i][j, weights[i].GetLength(1) - 1] = random.NextDouble() * (topRandom - bottomRandom) + bottomRandom;
+        //        }
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Initialize biases and validate their length
+        ///// </summary>
+        ///// <param name="biases"></param>
+        //private void InitializeBiases(double[] biases) {
+        //    if (biases.Length != layers.Length - 1) {
+        //        throw new Exception();
+        //    }
+        //    for (int i = 0; i < layers.Length - 1; i++) {
+        //        for (int j = 0; j < weights[i].GetLength(0); j++) {
+        //            weights[i][j, weights[i].GetLength(1) - 1] = biases[i];
+        //        }
+        //    }
+        //}
 
         #endregion
     }
