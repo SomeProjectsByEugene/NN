@@ -14,32 +14,23 @@ namespace NN {
             //Initialize random before weights
             random = new Random();
 
-            InitializeWeights();
-            //If biases are not specified, default zero biases are used
-            InitializeBiases();
-
             bottomRandom = -0.5;
             topRandom = 0.5;
 
             //If lerningRate is not specified, default 1.0 is used
             lerningRate = 1.0;
+
+            InitializeWeights();
+            //If biases are not specified, default zero biases are used
+            InitializeBiases();
         }
 
         public NeuralNetwork(int[] layers, double[] biases) : this(layers) {
             InitializeBiases(biases);
         }
 
-        public NeuralNetwork(int[] layers, double lerningRate) : this(layers) {
-            this.lerningRate = lerningRate;
-        }
-
         public NeuralNetwork(int[] layers, double[] biases, double lerningRate) : this(layers, biases) {
             this.lerningRate = lerningRate;
-        }
-
-        public NeuralNetwork(int[] layers, double bottomRandom, double topRandom) : this(layers) {
-            NeuralNetwork.bottomRandom = bottomRandom;
-            NeuralNetwork.topRandom = topRandom;
         }
 
         public NeuralNetwork(int[] layers, double[] biases, double bottomRandom, double topRandom) : this(layers, biases) {
@@ -48,6 +39,20 @@ namespace NN {
         }
 
         public NeuralNetwork(int[] layers, double[] biases, double lerningRate, double bottomRandom, double topRandom) : this(layers, biases) {
+            NeuralNetwork.bottomRandom = bottomRandom;
+            NeuralNetwork.topRandom = topRandom;
+        }
+
+        public NeuralNetwork(int[] layers, double lerningRate) : this(layers) {
+            this.lerningRate = lerningRate;
+        }
+
+        public NeuralNetwork(int[] layers, double lerningRate, double bottomRandom, double topRandom) : this(layers, lerningRate) {
+            NeuralNetwork.bottomRandom = bottomRandom;
+            NeuralNetwork.topRandom = topRandom;
+        }
+
+        public NeuralNetwork(int[] layers, double bottomRandom, double topRandom) : this(layers) {
             NeuralNetwork.bottomRandom = bottomRandom;
             NeuralNetwork.topRandom = topRandom;
         }
@@ -110,9 +115,9 @@ namespace NN {
             var inputsMatrix = Matrix.FromArray(inputs);
             for (int i = 0; i < layers.Length - 1; i++) {
                 //Add row of 1 to inputMatrix for multiplying it by bias
-                inputsMatrix = Matrix.AddRow(inputsMatrix, new double[] { 1.0 });
-                //Go layer ferther and calculate new inputs for new layer
                 inputsMatrix = Matrix.Multiply(weights[i], inputsMatrix);
+                //Sum weights with biases
+                inputsMatrix = Matrix.Sum(inputsMatrix, biases[i]);
                 //Apply activation function, technically they're outputs
                 Matrix.Map(inputsMatrix, Sigmoid);
             }
@@ -125,7 +130,7 @@ namespace NN {
         /// </summary>
         /// <param name="inputs"></param>
         /// <returns></returns>
-        protected virtual double[] FeedForward(double[] inputs, out List<double[]> layersOutputs) {
+        public virtual double[] FeedForward(double[] inputs, out List<double[]> layersOutputs) {
             if (layers == null)
                 throw new Exception();
             if (layers.Length < 1)
@@ -139,8 +144,8 @@ namespace NN {
 
             var inputsMatrix = Matrix.FromArray(inputs);
             for (int i = 0; i < layers.Length - 1; i++) {
-                inputsMatrix = Matrix.AddRow(inputsMatrix, new double[] { 1.0 });
                 inputsMatrix = Matrix.Multiply(weights[i], inputsMatrix);
+                inputsMatrix = Matrix.Sum(inputsMatrix, biases[i]);
                 Matrix.Map(inputsMatrix, Sigmoid);
                 //Saving new outputs
                 layersOutputs.Add(Matrix.ToArray(inputsMatrix));
@@ -157,12 +162,31 @@ namespace NN {
                 //Results of currently trained network
                 var outputs = FeedForward(dataSet.inputs, out var layersOutputs);
 
-                //Get errors matrices
-                var errors = GetErrors(dataSet.targets, outputs);
+                ////Get errors matrices
+                //var errors = GetErrors(dataSet.targets, outputs);
 
-                //Adjusting weights
-                AdjustWeights(errors, layersOutputs);
-                AdjustBiases(errors, layersOutputs);
+                ////Adjusting weights
+                //AdjustWeights(errors, layersOutputs);
+                //AdjustBiases(errors, layersOutputs);
+
+                double[,] errors = null;
+                for (int i = layers.Length - 2; i >= 0; i--) {
+                    if (i == layers.Length - 2) {
+                        errors = Matrix.Subtract(Matrix.FromArray(dataSet.targets), Matrix.FromArray(outputs));
+                    } else {
+                        errors = Matrix.Multiply(Matrix.Transpose(weights[i + 1]), errors);
+                    }
+                    var gradients = Matrix.FromArray(layersOutputs[i + 1]);
+                    //Matrix.Map(gradients, (x) => x * (x - 1) * );
+                    for (int j = 0; j < gradients.GetLength(0); j++) {
+                        gradients[j, 0] *= errors[j, 0]; 
+                    }
+                    biases[i] = gradients;
+                    //gradients = Matrix.Multiply(Matrix.Transpose(gradients), errors);
+                    gradients = Matrix.Multiply(gradients, Matrix.Transpose(Matrix.FromArray(layersOutputs[i])));
+                    Matrix.Map(gradients, (x) => x * lerningRate);
+                    weights[i] = Matrix.Sum(weights[i], gradients);
+                }
             }
         }
 
@@ -238,12 +262,10 @@ namespace NN {
             weights = new List<double[,]>();
             for (int i = 1; i < layers.Length; i++) {
                 //Between each two layers there's weights matrix
-                //In (layers[i - 1] + 1) "+1" is for extra space for bias
-                var weightsBetweenLayers = new double[layers[i], layers[i - 1] + 1];
+                var weightsBetweenLayers = new double[layers[i], layers[i - 1]];
                 //Randomizing weights
                 for (int j = 0; j < weightsBetweenLayers.GetLength(0); j++) {
-                    //"-1" for not touching space for biases
-                    for (int k = 0; k < weightsBetweenLayers.GetLength(1) - 1; k++) {
+                    for (int k = 0; k < weightsBetweenLayers.GetLength(1); k++) {
                         weightsBetweenLayers[j, k] = random.NextDouble() * (topRandom - bottomRandom) + bottomRandom;
                     }
                 }

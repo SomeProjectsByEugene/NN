@@ -28,18 +28,19 @@ namespace NN {
 
         private void TimerOnTick(object sender, EventArgs e) {
             Train(1);
-            nn.Draw();
+            //nn.Draw();
         }
 
-        private const double SCALE_COEFFICIENT = 1.25;
+        private const double SCALE_COEFFICIENT = 1.05;
 
         private NeuralNetworkVisual nn;
         private Random random = new Random();
-        private DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(10) };
+        private DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1) };
 
         private void OnLoaded(object sender, RoutedEventArgs e) {
             nn = new NeuralNetworkVisual(MainCanvas, new[] { 2, 2, 1 });
             timer.Start();
+            //Train(1);
         }
 
         private void OnMainCanvasMouseWheel(object sender, MouseWheelEventArgs e) {

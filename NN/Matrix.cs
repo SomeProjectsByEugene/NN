@@ -64,6 +64,14 @@ namespace NN {
             }
         }
 
+        //public static void Map(double[,] a, Func<double, double, double> func) {
+        //    for (int i = 0; i < a.GetLength(0); i++) {
+        //        for (int j = 0; j < a.GetLength(1); j++) {
+        //            a[i, j] = func(a[i, j]);
+        //        }
+        //    }
+        //}
+
         public static double[,] AddRow(double[,] a, double[] row) {
             var result = new double[a.GetLength(0) + 1, a.GetLength(1)];
             for (int i = 0; i < a.GetLength(0); i++) {

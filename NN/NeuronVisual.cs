@@ -22,8 +22,8 @@ namespace NN {
                     //Margin depends on canvas size
                     //Here canvas is sliced on imaginary rows and columns
                     Margin = new Thickness(
-                        CanvasWidth / (Layers.Length + 1) * Column,
-                        CanvasHeight / (Layers[Column - 1] + 1) * Row,
+                        CanvasWidth / (Layers.Length + 1) * Column - (NeuronSize / 2),
+                        CanvasHeight / (Layers[Column - 1] + 1) * Row - (NeuronSize / 2),
                         0, 0
                     ),
                     //Tweaking some colors

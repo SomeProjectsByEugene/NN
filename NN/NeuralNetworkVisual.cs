@@ -39,11 +39,13 @@ namespace NN {
         public NeuralNetworkVisual(Canvas canvas, int[] layers, double[] biases, double lerningRate, double bottomRandom, double topRandom) : base(layers, biases, lerningRate, bottomRandom, topRandom) {
         }
 
-        private const double NEURON_SIZE_COEFFICIENT = 15.0;
+        private const double NEURON_SIZE_COEFFICIENT = 10.0;
 
         private readonly Canvas canvas;
 
         private readonly List<NeuronVisual> neurons;
+
+        private List<double[]> layersOutputs;
 
         /// <summary>
         /// Draws network on canvas
@@ -57,36 +59,32 @@ namespace NN {
             DrawWeights();
         }
 
-        public override double[] FeedForward(double[] inputs) {
-            for (int i = 0; i < inputs.Length; i++) {
-                var b = neurons.Where(n => n.Row == i + 1 && n.Column == 1).FirstOrDefault();
-                var c = b.GetCenter();
-                var textInput = new TextBlock {
-                    Text = inputs[i].ToString(),
-                    Margin = new Thickness(c.X - 3, c.Y - 6, 0, 0),
-                    FontSize = 10,
-                    Foreground = new SolidColorBrush(Colors.Red),
-                };
-                Canvas.SetZIndex(textInput, 2);
-                canvas.Children.Add(textInput);
-            }
-            
-            return base.FeedForward(inputs);
+        /// <summary>
+        /// Draws network on canvas with layers outputs
+        /// </summary>
+        public void Draw(List<double[]> layersOutputs) {
+            Draw();
+            DrawLayersOutputs(layersOutputs);
+        }
+
+        public override double[] FeedForward(double[] inputs, out List<double[]> layersOutputs) {
+            var outputs = base.FeedForward(inputs, out layersOutputs);
+            Draw(layersOutputs);
+            return outputs;
         }
 
         public override void Train(IEnumerable<ITraining> dataSets) {
             base.Train(dataSets);
-
         }
 
-        private void DisplayError() {
-            var text = new TextBlock {
-                Margin = new Thickness(0, 0, 0, 0),
-                Foreground = new SolidColorBrush(Colors.White),
-                FontSize = 14
-            };
+        //private void DisplayError() {
+        //    var text = new TextBlock {
+        //        Margin = new Thickness(0, 0, 0, 0),
+        //        Foreground = new SolidColorBrush(Colors.White),
+        //        FontSize = 14
+        //    };
 
-        }
+        //}
 
         //private double GetError(int checksCount) {
         //    var errors = new double[checksCount];
@@ -141,6 +139,26 @@ namespace NN {
                     }
                 }
             } 
+        }
+
+        /// <summary>
+        /// Draws outputs of each neuron within a neuron on canvas
+        /// </summary>
+        private void DrawLayersOutputs(List<double[]> layersOutputs) {
+            for (int i = 0; i < layersOutputs.Count; i++) {
+                for (int j = 0; j < layersOutputs[i].Length; j++) {
+                    var b = neurons.Where(n => n.Row == j + 1 && n.Column == i + 1).FirstOrDefault();
+                    var c = b.GetCenter();
+                    var textInput = new TextBlock {
+                        Text = layersOutputs[i][j].ToString(),
+                        Margin = new Thickness(c.X - 4, c.Y - 11, 0, 0),
+                        FontSize = 15,
+                        Foreground = new SolidColorBrush(Colors.Red),
+                    };
+                    Canvas.SetZIndex(textInput, 2);
+                    canvas.Children.Add(textInput);
+                }
+            }
         }
 
         private void OnCanvasSizeChanged(object sender, SizeChangedEventArgs e) {
